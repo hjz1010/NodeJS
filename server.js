@@ -1,7 +1,7 @@
 const http    = require('http');
 const express = require('express');
 const dotenv  = require('dotenv')
-const { createUser2, createPost2, readPost2 } = require('./app')
+// const { createUser2, createPost2, readPost2 } = require('./app')
 
 dotenv.config()
 
@@ -53,12 +53,51 @@ const createPost = (req, res) => {
 }
 
 //Mission 7 -Read
+const readPost = async (req, res) => {
+    const posts = await myDataSource.query('SELECT * FROM posts')
+    res.status(200).json({data: posts})
+}
+// 여기까진 성공 이제 userName도 같이 불러오자
+const readPosts = async (req, res) => {
+    const posts = await myDataSource.query(`
+        SELECT 
+            posts.id, 
+            posts.title, 
+            posts.content, 
+            posts.user_id, 
+            users.name as user_name
+        FROM posts  
+        JOIN users ON posts.user_id = users.id;
+    `)
+    res.status(200).json({data: posts})
+}
 
-
+//Mission 7 -Read2
+const readPostsByUser = async (req, res, next) => {
+    const { user_id } = req.params   // path parameter 받아오는 방법!
+    const posts = await myDataSource.query(`
+        SELECT 
+            id as user_id ,
+            name as user_name 
+        FROM users
+        WHERE id = ?
+    `, [user_id])
+    const postings = await myDataSource.query(`
+        SELECT 
+            id as post_id, 
+            title, 
+            content    
+        FROM posts
+        WHERE user_id = ?
+    `,[user_id])
+    posts[0]['postings'] = postings  // 따로 불러와서 합치기 
+    res.status(200).json({data: posts})
+}
 
 app.post('/signup', createUser)
 app.post('/posting', createPost)
-app.get('/posting', readPost2)
+app.get('/posts', readPosts)
+app.get('/posts/:user_id', readPostsByUser)
 
 const server = http.createServer(app)
 
