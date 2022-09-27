@@ -102,3 +102,25 @@ app.get('/posts/:user_id', readPostsByUser)
 const server = http.createServer(app)
 
 server.listen(8000, () => { console.log('server is listening on PORT 8000')} )
+
+
+
+
+const { someFunc, someAsyncFunc } = require('./func');
+
+
+
+app.get('/someFunc', (req, res) => {
+	const { someQuery } = req.query;
+
+	const someValue = someFunc(someQuery);
+	res.json({ result: someValue });
+});
+
+app.get('/someAsyncFunc', async (req, res) => {
+	const { someQuery } = req.query;
+
+	const someValue = await someAsyncFunc(someQuery);
+	res.json({ result: someValue });
+});
+
