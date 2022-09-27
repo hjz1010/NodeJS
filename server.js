@@ -94,10 +94,68 @@ const readPostsByUser = async (req, res, next) => {
     res.status(200).json({data: posts})
 }
 
+// Read2 멘토 코드 
+const readPostsByUser2 = async (req, res, next) => {
+    const { user_id } = req.params   // path parameter 받아오는 방법!
+    const postings = await myDataSource.query(`
+        SELECT
+        users.id as user_id,
+        users.name as user_name,
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+            'post_id', posts.id,
+            'title', posts.title,
+            'content', posts.content
+            )
+        ) as postings
+        FROM posts
+        JOIN users ON users.id = posts.user_id
+        WHERE users.id = ?
+        GROUP BY users.id
+    ;`,[user_id])
+    res.status(200).json({data: postings})
+}
+
+//Mission 7 -Update
+const updatePost = async (req, res) => {
+    const { post_id, content } = req.body.data
+    await myDataSource.query(`
+        UPDATE posts
+        SET content = ?
+        WHERE id = ?
+    `, [content, post_id])
+    const newPost = await myDataSource.query(`
+        SELECT 
+            posts.id, 
+            posts.title, 
+            posts.content, 
+            posts.user_id, 
+            users.name as user_name
+        FROM posts  
+        JOIN users ON posts.user_id = users.id
+        WHERE posts.id = ?
+    `,[post_id])
+    
+    res.status(201).json({data: newPost})
+} 
+
+//Mission 7 -Delete
+const deletePost = async (req, res) => {
+    const { post_id } = req.params
+    await myDataSource.query(`
+        DELETE FROM posts
+        WHERE id = ?
+    `,[post_id])
+
+    res.status(204).json({message: 'postingDeleted'})  //204로 응답을 보내면 바디(메세지)가 안 온다!
+}
+
 app.post('/signup', createUser)
 app.post('/posting', createPost)
 app.get('/posts', readPosts)
-app.get('/posts/:user_id', readPostsByUser)
+app.get('/posts/:user_id', readPostsByUser2)
+app.patch('/posting/update', updatePost)
+app.delete('/posting/delete/:post_id', deletePost)
 
 const server = http.createServer(app)
 
@@ -105,22 +163,20 @@ server.listen(8000, () => { console.log('server is listening on PORT 8000')} )
 
 
 
+// 세션: 에러 핸들링
+// const { someFunc, someAsyncFunc } = require('./func');
 
-const { someFunc, someAsyncFunc } = require('./func');
+// app.get('/someFunc', (req, res) => {
+// 	const { someQuery } = req.query;
 
+// 	const someValue = someFunc(someQuery);
+// 	res.json({ result: someValue });
+// });
 
+// app.get('/someAsyncFunc', async (req, res) => {
+// 	const { someQuery } = req.query;
 
-app.get('/someFunc', (req, res) => {
-	const { someQuery } = req.query;
-
-	const someValue = someFunc(someQuery);
-	res.json({ result: someValue });
-});
-
-app.get('/someAsyncFunc', async (req, res) => {
-	const { someQuery } = req.query;
-
-	const someValue = await someAsyncFunc(someQuery);
-	res.json({ result: someValue });
-});
+// 	const someValue = await someAsyncFunc(someQuery);
+// 	res.json({ result: someValue });
+// });
 
