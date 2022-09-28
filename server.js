@@ -27,16 +27,44 @@ const app = express()
 app.use(express.json())
 
 //Mission 6
-const createUser = (req, res) => {
+
+// const createUser = (req, res) => {
+//     const {name, email, password} = req.body.data
+
+//     const queryRes = myDataSource.query(`
+//         INSERT INTO users (name, email, password)
+//         VALUE (?, ?, ?)
+//     `, [name, email, password])
+//     queryRes
+//         .then(() => {
+//             res.status(200).json({message: "userCreated"})
+//         })
+//         .catch(()=>{
+//             res.status(500).json({message: "error"})
+//         })
+// }
+
+const createUser = async (req, res) => {
     const {name, email, password} = req.body.data
 
-    const queryRes = myDataSource.query(`
-        INSERT INTO users (name, email, password)
-        VALUE (?, ?, ?)
-    `, [name, email, password])
-    queryRes.then(() => {
+    // 예외핸들링도 해야지
+    if (!name || !email || !password) {    
+        res.status(400).json({message: "누락된 값이 있습니다"})
+        return;   // 더 이상 코드가 진행되지 않도록 !!!!!
+    } 
+
+    try {
+        await myDataSource.query(`
+            INSERT INTO users (name, email, password)
+            VALUE (?, ?, ?)
+        `, [name, email, password])
+        
         res.status(200).json({message: "userCreated"})
-    })
+    } 
+    catch (err) {
+        res.status(500).json({message: "error"})
+    }
+
 }
 
 //Mission 7 -Create
@@ -47,9 +75,10 @@ const createPost = (req, res) => {
         INSERT INTO posts (title, content, user_id) 
         VALUE (?, ?, ?)
         `,[ title, content, userId ])
-    queryRes.then(() => {
-        res.status(200).json({message: "postCreated"})
-    })
+    queryRes
+        .then(() => {
+            res.status(200).json({message: "postCreated"})
+        })
 }
 
 //Mission 7 -Read
