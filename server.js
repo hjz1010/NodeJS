@@ -1,6 +1,8 @@
 const http    = require('http');
 const express = require('express');
-const dotenv  = require('dotenv')
+const dotenv  = require('dotenv');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 // const { createUser2, createPost2, readPost2 } = require('./app')
 
 dotenv.config()
@@ -49,23 +51,68 @@ const createUser = async (req, res) => {
 
     // 예외핸들링도 해야지
     if (!name || !email || !password) {    
-        res.status(400).json({message: "누락된 값이 있습니다"})
+        res.status(400).json({message: '누락된 값이 있습니다'})
         return;   // 더 이상 코드가 진행되지 않도록 !!!!!
     } 
+
+    console.log('before encrypted: ', password)
+    // const salt = bcrypt.genSalt()
+    const salt = bcrypt.genSaltSync(12)
+    console.log('salt: ', salt)
+
+    const hashedPassword = bcrypt.hashSync(password, salt)
+    console.log('after encrypted: ', hashedPassword)
 
     try {
         await myDataSource.query(`
             INSERT INTO users (name, email, password)
             VALUE (?, ?, ?)
-        `, [name, email, password])
+        `, [name, email, hashedPassword])
         
-        res.status(200).json({message: "userCreated"})
+        res.status(200).json({message: 'userCreated'})
     } 
     catch (err) {
-        res.status(500).json({message: "error"})
+        console.log(err)
+        res.status(500).json({message: 'error'})
     }
 
 }
+
+// LogIn 
+
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body.data
+
+    if (!email || !password) {
+        res.status(400).json({message: '아이디와 비밀번호를 모두 입력하세요.'})
+        return;
+    }
+    const [user] = await myDataSource.query(`
+        SELECT * FROM users WHERE email=?
+    `,[email])
+    console.log(user)  // 배열
+    if (!user) {
+        res.status(404).json({message: 'invalid user'})
+        return;
+    }
+
+    try {
+        const isPasswordCorrect =  bcrypt.compareSync(password, user.password) //true, false를 반환
+        
+        if (!isPasswordCorrect ) { 
+            res.status(400).json({message: 'login failed' })
+            return;
+        }
+        
+        const token = jwt.sign({user_id: user.id}, 'secretKey')
+        res.status(200).json({message: 'login succeed', token: token })
+       
+    }
+    catch (err) {
+        console.log(err)
+        res.status(500).json({message: 'error'})
+    }
+})
 
 //Mission 7 -Create
 const createPost = (req, res) => {
