@@ -1,30 +1,11 @@
 const http    = require('http');
 const express = require('express');
 const dotenv  = require('dotenv');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-// const { createUser2, createPost2, readPost2 } = require('./app')
 
 dotenv.config()
+// const { createUser2, createPost2, readPost2 } = require('./app')
+const userController = require('./controllers/userController')
 
-const { DataSource } = require('typeorm')
-const myDataSource = new DataSource ({
-    type    : process.env.TYPEORM_CONNECTION,
-    host    : process.env.TYPEORM_HOST,
-    port    : process.env.TYPEORM_PORT,
-    username: process.env.TYPEORM_USERNAME,
-    password: process.env.TYPEORM_PASSWORD,
-    database: process.env.TYPEORM_DATABASE
-})
-
-myDataSource.initialize()
-    .then(() => {
-        console.log('Data Source has been initialized!')
-    })
-    .catch((err) => {
-        console.error("Error during Data Source initialization", err)
-    })
- 
 const app = express()
 app.use(express.json())
 
@@ -46,73 +27,83 @@ app.use(express.json())
 //         })
 // }
 
-const createUser = async (req, res) => {
-    const {name, email, password} = req.body.data
+// const createUser = async (req, res) => {
+//     const {name, email, password} = req.body.data
 
-    // 예외핸들링도 해야지
-    if (!name || !email || !password) {    
-        res.status(400).json({message: '누락된 값이 있습니다'})
-        return;   // 더 이상 코드가 진행되지 않도록 !!!!!
-    } 
+//     // 예외핸들링도 해야지
+//     if (!name || !email || !password) {    
+//         res.status(400).json({message: '누락된 값이 있습니다'})
+//         return;   // 더 이상 코드가 진행되지 않도록 !!!!!
+//     } 
 
-    console.log('before encrypted: ', password)
-    // const salt = bcrypt.genSalt()
-    const salt = bcrypt.genSaltSync(12)
-    console.log('salt: ', salt)
+//     const [isDuplicateEmail] = await myDataSource.query(`
+//         SELECT * FROM users WHERE email =?
+//     `,[email])
 
-    const hashedPassword = bcrypt.hashSync(password, salt)
-    console.log('after encrypted: ', hashedPassword)
+//     if (isDuplicateEmail) {
+//         res.status(400).json({message: '이미 존재하는 이메일입니다.'})
+//         return;
+//     }
 
-    try {
-        await myDataSource.query(`
-            INSERT INTO users (name, email, password)
-            VALUE (?, ?, ?)
-        `, [name, email, hashedPassword])
+//     console.log('before encrypted: ', password)
+//     // const salt = bcrypt.genSalt()
+//     const salt = bcrypt.genSaltSync(12)
+//     console.log('salt: ', salt)
+
+//     const hashedPassword = bcrypt.hashSync(password, salt)
+//     console.log('after encrypted: ', hashedPassword)
+
+//     try {
+//         await myDataSource.query(`
+//             INSERT INTO users (name, email, password)
+//             VALUE (?, ?, ?)
+//         `, [name, email, hashedPassword])
         
-        res.status(200).json({message: 'userCreated'})
-    } 
-    catch (err) {
-        console.log(err)
-        res.status(500).json({message: 'error'})
-    }
-
-}
+//         res.status(200).json({message: 'userCreated'})
+//     } 
+//     catch (err) {
+//         console.log(err)
+//         res.status(500).json({message: 'error'})
+//     }
+// }
+// Layered Pattern 적용합시다 ======================================
 
 // LogIn 
 
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body.data
+// app.post('/login', async (req, res) => {
+//     const { email, password } = req.body.data
 
-    if (!email || !password) {
-        res.status(400).json({message: '아이디와 비밀번호를 모두 입력하세요.'})
-        return;
-    }
-    const [user] = await myDataSource.query(`
-        SELECT * FROM users WHERE email=?
-    `,[email])
-    console.log(user)  // 배열
-    if (!user) {
-        res.status(404).json({message: 'invalid user'})
-        return;
-    }
+//     if (!email || !password) {
+//         res.status(400).json({message: '아이디와 비밀번호를 모두 입력하세요.'})
+//         return;
+//     }
+//     const [user] = await myDataSource.query(`
+//         SELECT * FROM users WHERE email=?
+//     `,[email])
+//     console.log(user)  // 배열
+//     if (!user) {
+//         res.status(404).json({message: 'invalid user'})
+//         return;
+//     }
 
-    try {
-        const isPasswordCorrect =  bcrypt.compareSync(password, user.password) //true, false를 반환
+//     try {
+//         const isPasswordCorrect =  bcrypt.compareSync(password, user.password) //true, false를 반환
         
-        if (!isPasswordCorrect ) { 
-            res.status(400).json({message: 'login failed' })
-            return;
-        }
+//         if (!isPasswordCorrect ) { 
+//             res.status(400).json({message: 'login failed' })
+//             return;
+//         }
         
-        const token = jwt.sign({user_id: user.id}, 'secretKey')
-        res.status(200).json({message: 'login succeed', token: token })
+//         const token = jwt.sign({user_id: user.id}, 'secretKey')
+//         res.status(200).json({message: 'login succeed', token: token })
        
-    }
-    catch (err) {
-        console.log(err)
-        res.status(500).json({message: 'error'})
-    }
-})
+//     }
+//     catch (err) {
+//         console.log(err)
+//         res.status(500).json({message: 'error'})
+//     }
+// })
+// Layered Pattern 적용합시다 ======================================
 
 //Mission 7 -Create
 const createPost = (req, res) => {
@@ -226,7 +217,8 @@ const deletePost = async (req, res) => {
     res.status(204).json({message: 'postingDeleted'})  //204로 응답을 보내면 바디(메세지)가 안 온다!
 }
 
-app.post('/signup', createUser)
+app.post('/signup', userController.createUser)
+app.post('/login', userController.login)
 app.post('/posting', createPost)
 app.get('/posts', readPosts)
 app.get('/posts/:user_id', readPostsByUser2)
