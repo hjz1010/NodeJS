@@ -5,6 +5,7 @@ const dotenv  = require('dotenv');
 dotenv.config()
 // const { createUser2, createPost2, readPost2 } = require('./app')
 const userController = require('./controllers/userController')
+const postController = require('./controllers/postController')
 
 const app = express()
 app.use(express.json())
@@ -106,124 +107,124 @@ app.use(express.json())
 // Layered Pattern 적용합시다 ======================================
 
 //Mission 7 -Create
-const createPost = (req, res) => {
-    const { title, content, userId } = req.body.data
+// const createPost = (req, res) => {
+//     const { title, content, userId } = req.body.data
 
-    const queryRes = myDataSource.query(`
-        INSERT INTO posts (title, content, user_id) 
-        VALUE (?, ?, ?)
-        `,[ title, content, userId ])
-    queryRes
-        .then(() => {
-            res.status(200).json({message: "postCreated"})
-        })
-}
+//     const queryRes = myDataSource.query(`
+//         INSERT INTO posts (title, content, user_id) 
+//         VALUE (?, ?, ?)
+//         `,[ title, content, userId ])
+//     queryRes
+//         .then(() => {
+//             res.status(200).json({message: "postCreated"})
+//         })
+// }
 
 //Mission 7 -Read
-const readPost = async (req, res) => {
-    const posts = await myDataSource.query('SELECT * FROM posts')
-    res.status(200).json({data: posts})
-}
-// 여기까진 성공 이제 userName도 같이 불러오자
-const readPosts = async (req, res) => {
-    const posts = await myDataSource.query(`
-        SELECT 
-            posts.id, 
-            posts.title, 
-            posts.content, 
-            posts.user_id, 
-            users.name as user_name
-        FROM posts  
-        JOIN users ON posts.user_id = users.id;
-    `)
-    res.status(200).json({data: posts})
-}
+// const readPost = async (req, res) => {
+//     const posts = await myDataSource.query('SELECT * FROM posts')
+//     res.status(200).json({data: posts})
+// }
+// // 여기까진 성공 이제 userName도 같이 불러오자
+// const readPosts = async (req, res) => {
+//     const posts = await myDataSource.query(`
+//         SELECT 
+//             posts.id, 
+//             posts.title, 
+//             posts.content, 
+//             posts.user_id, 
+//             users.name as user_name
+//         FROM posts  
+//         JOIN users ON posts.user_id = users.id;
+//     `)
+//     res.status(200).json({data: posts})
+// }
 
 //Mission 7 -Read2
-const readPostsByUser = async (req, res, next) => {
-    const { user_id } = req.params   // path parameter 받아오는 방법!
-    const posts = await myDataSource.query(`
-        SELECT 
-            id as user_id ,
-            name as user_name 
-        FROM users
-        WHERE id = ?
-    `, [user_id])
-    const postings = await myDataSource.query(`
-        SELECT 
-            id as post_id, 
-            title, 
-            content    
-        FROM posts
-        WHERE user_id = ?
-    `,[user_id])
-    posts[0]['postings'] = postings  // 따로 불러와서 합치기 
-    res.status(200).json({data: posts})
-}
+// const readPostsByUser = async (req, res, next) => {
+//     const { user_id } = req.params   // path parameter 받아오는 방법!
+//     const posts = await myDataSource.query(`
+//         SELECT 
+//             id as user_id ,
+//             name as user_name 
+//         FROM users
+//         WHERE id = ?
+//     `, [user_id])
+//     const postings = await myDataSource.query(`
+//         SELECT 
+//             id as post_id, 
+//             title, 
+//             content    
+//         FROM posts
+//         WHERE user_id = ?
+//     `,[user_id])
+//     posts[0]['postings'] = postings  // 따로 불러와서 합치기 
+//     res.status(200).json({data: posts})
+// }
 
 // Read2 멘토 코드 
-const readPostsByUser2 = async (req, res, next) => {
-    const { user_id } = req.params   // path parameter 받아오는 방법!
-    const postings = await myDataSource.query(`
-        SELECT
-        users.id as user_id,
-        users.name as user_name,
-        JSON_ARRAYAGG(
-            JSON_OBJECT(
-            'post_id', posts.id,
-            'title', posts.title,
-            'content', posts.content
-            )
-        ) as postings
-        FROM posts
-        JOIN users ON users.id = posts.user_id
-        WHERE users.id = ?
-        GROUP BY users.id
-    ;`,[user_id])
-    res.status(200).json({data: postings})
-}
+// const readPostsByUser2 = async (req, res, next) => {
+//     const { user_id } = req.params   // path parameter 받아오는 방법!
+//     const postings = await myDataSource.query(`
+//         SELECT
+//         users.id as user_id,
+//         users.name as user_name,
+//         JSON_ARRAYAGG(
+//             JSON_OBJECT(
+//             'post_id', posts.id,
+//             'title', posts.title,
+//             'content', posts.content
+//             )
+//         ) as postings
+//         FROM posts
+//         JOIN users ON users.id = posts.user_id
+//         WHERE users.id = ?
+//         GROUP BY users.id
+//     ;`,[user_id])
+//     res.status(200).json({data: postings})
+// }
 
 //Mission 7 -Update
-const updatePost = async (req, res) => {
-    const { post_id, content } = req.body.data
-    await myDataSource.query(`
-        UPDATE posts
-        SET content = ?
-        WHERE id = ?
-    `, [content, post_id])
-    const newPost = await myDataSource.query(`
-        SELECT 
-            posts.id, 
-            posts.title, 
-            posts.content, 
-            posts.user_id, 
-            users.name as user_name
-        FROM posts  
-        JOIN users ON posts.user_id = users.id
-        WHERE posts.id = ?
-    `,[post_id])
+// const updatePost = async (req, res) => {
+//     const { post_id, content } = req.body.data
+//     await myDataSource.query(`
+//         UPDATE posts
+//         SET content = ?
+//         WHERE id = ?
+//     `, [content, post_id])
+//     const newPost = await myDataSource.query(`
+//         SELECT 
+//             posts.id, 
+//             posts.title, 
+//             posts.content, 
+//             posts.user_id, 
+//             users.name as user_name
+//         FROM posts  
+//         JOIN users ON posts.user_id = users.id
+//         WHERE posts.id = ?
+//     `,[post_id])
     
-    res.status(201).json({data: newPost})
-} 
+//     res.status(201).json({data: newPost})
+// } 
 
 //Mission 7 -Delete
-const deletePost = async (req, res) => {
-    const { post_id } = req.params
-    await myDataSource.query(`
-        DELETE FROM posts
-        WHERE id = ?
-    `,[post_id])
+// const deletePost = async (req, res) => {
+//     const { post_id } = req.params
+//     await myDataSource.query(`
+//         DELETE FROM posts
+//         WHERE id = ?
+//     `,[post_id])
 
-    res.status(204).json({message: 'postingDeleted'})  //204로 응답을 보내면 바디(메세지)가 안 온다!
-}
+//     res.status(204).json({message: 'postingDeleted'})  //204로 응답을 보내면 바디(메세지)가 안 온다!
+// }
 
 app.post('/signup', userController.createUser)
 app.post('/login', userController.login)
-app.post('/posting', createPost)
-app.get('/posts', readPosts)
-app.get('/posts/:user_id', readPostsByUser2)
-app.patch('/posting/update', updatePost)
-app.delete('/posting/delete/:post_id', deletePost)
+app.post('/posting', postController.createPost)
+app.get('/posts', postController.readPost)
+// app.get('/posts/:user_id', readPostsByUser2)  //함수 하나로 합체!
+app.patch('/posting/update', postController.updatePost)
+app.delete('/posting/delete/:post_id', postController.deletePost)
 
 const server = http.createServer(app)
 
