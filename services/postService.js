@@ -5,7 +5,11 @@ const createPost = async (title, content, userId) => {
 }
 
 const readPost = async (user_id) => {
-    return await postDao.readPost(user_id)
+    if (user_id) {
+        return await postDao.readPostByUserId(user_id)
+    } else {
+        return await postDao.readPostAll()
+    }
 }
 
 const updatePost = async ( post_id, content ) => {

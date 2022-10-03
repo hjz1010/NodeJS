@@ -11,19 +11,22 @@ const createUser = async (name, email, password) => {
 }
 
 const login = async (email, password) => {
-
-    const user = await userDao.login(email, password)
+    const user = await userDao.getUserByEmail(email, password)
 
     if (!user) {
-        // res.status(404).json({message: 'invalid user'})
-        return 'invalid user';
+        // return 'invalid user';
+        const error = new Error('login failed')
+        error.statusCode = 404
+        throw error
     }
 
     const isPasswordCorrect =  bcrypt.compareSync(password, user.password) //true, false를 반환
         
     if (!isPasswordCorrect ) { 
-        // res.status(400).json({message: 'login failed' })
-        return 'login failed';
+        // return 'login failed';
+        const error = new Error('login failed')
+        error.statusCode = 404
+        throw error
     }
     
     const token = jwt.sign({user_id: user.id}, 'secretKey')

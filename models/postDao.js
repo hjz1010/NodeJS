@@ -24,45 +24,41 @@ const createPost = async (title, content, userId) => {
     return queryRes;
 }
 
-const readPost = async (user_id) => {
+const readPostByUserId = async (user_id) => {
+    const posts = await myDataSource.query(`
+        SELECT
+        users.id as user_id,
+        users.name as user_name,
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+            'post_id', posts.id,
+            'title', posts.title,
+            'content', posts.content
+            )
+        ) as postings
+        FROM posts
+        JOIN users ON users.id = posts.user_id
+        WHERE users.id = ?
+        GROUP BY users.id
+    ;`,[user_id])
 
-    console.log('userId: ',user_id)
-    if (user_id) {
-        const posts = await myDataSource.query(`
-            SELECT
-            users.id as user_id,
-            users.name as user_name,
-            JSON_ARRAYAGG(
-                JSON_OBJECT(
-                'post_id', posts.id,
-                'title', posts.title,
-                'content', posts.content
-                )
-            ) as postings
-            FROM posts
-            JOIN users ON users.id = posts.user_id
-            WHERE users.id = ?
-            GROUP BY users.id
-        ;`,[user_id])
-
-        return posts;
-
-    } else {
-        const posts = await myDataSource.query(`
-            SELECT 
-                posts.id, 
-                posts.title, 
-                posts.content, 
-                posts.user_id, 
-                users.name as user_name
-            FROM posts  
-            JOIN users ON posts.user_id = users.id;
-        `)  
-        
-        return posts
-    }
+    return posts;
 }
-
+const readPostAll = async () => {
+        const posts = await myDataSource.query(`
+        SELECT 
+            posts.id, 
+            posts.title, 
+            posts.content, 
+            posts.user_id, 
+            users.name as user_name
+        FROM posts  
+        JOIN users ON posts.user_id = users.id;
+    `)  
+    
+    return posts
+}
+// update 기능만 갖도록 수정해보자 -> 정답은 없고 기업에 따라 모으기도, 나누기도 한다 ###########
 const updatePost = async ( post_id, content ) => {
     await myDataSource.query(`
         UPDATE posts
@@ -91,4 +87,4 @@ const deletePost = async (post_id) => {
     `,[post_id])
 }
 
-module.exports = { createPost, readPost, updatePost, deletePost }
+module.exports = { createPost, readPostByUserId, readPostAll, updatePost, deletePost }

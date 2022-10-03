@@ -34,7 +34,10 @@ const createUser = async (name, email, hashedPassword) => {
     `,[email])
 
     if (isDuplicateEmail) {
-        return 'duplicate email';
+        // return 'duplicate email';
+        const error = new Error ('duplicate email')
+        error.statusCode = 400
+        throw error
     }  
 
     return await myDataSource.query(`
@@ -44,7 +47,8 @@ const createUser = async (name, email, hashedPassword) => {
 
 }
 
-const login = async (email) => {
+// Dao에서 함수 이름은 "어떤 데이터를 어떻게 C.R.U.D하는 것인지-로 적어주는게 좋다!"
+const getUserByEmail = async (email) => {
     const [user] = await myDataSource.query(`
     SELECT * FROM users WHERE email=?
     `,[email])
@@ -53,4 +57,4 @@ const login = async (email) => {
     
 }
 
-module.exports = { createUser, login }
+module.exports = { createUser, getUserByEmail }
