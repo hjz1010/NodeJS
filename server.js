@@ -1,14 +1,18 @@
 const http    = require('http');
 const express = require('express');
 const dotenv  = require('dotenv');
-
 dotenv.config()
+const router = require('./routers')
+
+
 // const { createUser2, createPost2, readPost2 } = require('./app')
-const userController = require('./controllers/userController')
-const postController = require('./controllers/postController')
+// const userController = require('./controllers/userController')
+// const postController = require('./controllers/postController')
 
 const app = express()
+
 app.use(express.json())
+app.use(router)
 
 //Mission 6
 
@@ -216,15 +220,15 @@ app.use(express.json())
 //     `,[post_id])
 
 //     res.status(204).json({message: 'postingDeleted'})  //204로 응답을 보내면 바디(메세지)가 안 온다!
-// }
+// // }
 
-app.post('/signup', userController.createUser)
-app.post('/login', userController.login)
-app.post('/posting', postController.createPost)
-app.get('/posts', postController.readPost)
-// app.get('/posts/:user_id', readPostsByUser2)  //함수 하나로 합체!
-app.patch('/posting/update', postController.updatePost)
-app.delete('/posting/delete/:post_id', postController.deletePost)
+// app.post('/signup', userController.createUser)
+// app.post('/login', userController.login)
+// app.post('/posting', postController.createPost)
+// app.get('/posts', postController.readPost)
+// // app.get('/posts/:user_id', readPostsByUser2)  //함수 하나로 합체!
+// app.patch('/posting/update', postController.updatePost)
+// app.delete('/posting/delete/:post_id', postController.deletePost)
 
 const server = http.createServer(app)
 
