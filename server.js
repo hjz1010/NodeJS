@@ -1,18 +1,23 @@
 const http    = require('http');
-const express = require('express');
-const dotenv  = require('dotenv');
-dotenv.config()
-const router = require('./routers')
-
+//#### app1.js로 분리 #################
+// const express = require('express'); 
+// const dotenv  = require('dotenv');
+// dotenv.config()
+// const router = require('./routers'); 
+//####################################
+const { createApp } = require('./app1')
 
 // const { createUser2, createPost2, readPost2 } = require('./app')
 // const userController = require('./controllers/userController')
 // const postController = require('./controllers/postController')
 
-const app = express()
+//#### app1.js로 분리 ######
+// const app = express()
 
-app.use(express.json())
-app.use(router)
+// app.use(express.json())
+// app.use(router)
+//#### 분리된 앱 가져오기 ######
+const app = createApp();
 
 //Mission 6
 
